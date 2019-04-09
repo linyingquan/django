@@ -119,3 +119,232 @@ HttpRequest）对象。
     ```
     
     - 在反转url的时候就可以使用`应用命名空间：url名称`的方式进行反转
+
+### 1.6 渲染模板
+1. `render_to_string`:找到模板，然后将模板编译后渲染成python的字符串格式，然后通过HttpResponse类包装成一个HttpResponse对象返回出去，示例代码如下：
+    ``` 
+    from django.http import HttpResponse
+    from django.template.loader import render_to_string
+
+    def index(request):
+        html = render_to_string("index.html")
+        return HttpResponse(html)    
+    ```
+2. django还提供了更加简便的方式，直接将模板渲染成字符串和包装为HttpResponse对象一步到位，示例代码如下：
+    ```
+    from django.shortcuts import render 
+
+    def index(request):
+        return render(request,'index.html')
+    ```
+3. 模板查找路径配置  
+    在项目的 settings.py 文件中。有一个 TEMPLATES 配置，这个配置包含了模板引擎的配置，模板
+查找路径的配置，模板上下文的配置等。模板路径可以在两个地方配置。
+    1. DIRS ：这是一个列表，在这个列表中可以存放所有的模板路径，以后在视图中使
+22
+知了课堂
+用 render 或者 render_to_string 渲染模板的时候，会在这个列表的路径中查找模板。
+    2. APP_DIRS ：默认为 True ，这个设置为 True 后，会在 INSTALLED_APPS 的安装了的 APP 下
+的 templates 文件加中查找模板。
+    3. 查找顺序：比如代码 render('list.html') 。先会在 DIRS 这个列表中依次查找路径下有没有
+这个模板，如果有，就返回。如果 DIRS 列表中所有的路径都没有找到，那么会先检查当前这
+个视图所处的 app 是否已经安装，如果已经安装了，那么就先在当前这个 app 下
+的 templates 文件夹中查找模板，如果没有找到，那么会在其他已经安装了的 app 中查找。
+如果所有路径下都没有找到，那么会抛出一个 TemplateDoesNotExist 的异常。
+
+4. 向HTML模板传入参数
+    ```
+    def index(request):
+       context = {'username':'林应权'}        # 通过字典的方式
+       return render(request,'index.html', context=context)
+    ```
+    在HTML模板中接收参数
+    ```
+    <body>
+        {{ username }}
+    </body>
+    ```
+    如果定义的是一个class类，模板也可以通过.的方式访问它的属性
+    ```
+    class Person(object):
+        def __init__(self,username):
+            self.username = username
+    def index(request):
+        p = Person("林应权")
+        context = {
+            'person':p
+        }
+        return render(request,'index.html', context=context)
+    ```
+    html模板访问方式
+    ```
+    <body>
+        {{ person.username }}
+    </body>
+    ```
+    如果传入的参数为一个列表或元组的话
+    ```
+    def index(request):
+        context = {
+            'persons':[
+                '林应权',
+                'javis',
+                'cuisyang'
+            ]
+        }
+    html模板文件访问方式不能是[],而是.    
+    ```
+        <body>
+            {{ persons.1 }}
+        </body>
+
+### 1.7 常用标签
+1. `if`标签：与python类似，但是格式有变化，示例如下：
+    ```html
+    <body>
+       {% if age < 18 %}
+        <p>你是未成年</p>
+       {% elif age == 18 %}
+        <p>成年人</p>
+       {% else  %}
+        <p>害不害臊</p>
+       {% endif %}
+    </body>
+    ```
+    在`views.py`中的代码如下
+    ```python
+    def index(request):
+       context = {
+           'age': 18  # 传入的值
+       }
+       return render(request, 'index.html',context=context)
+    ```
+    在if标签中，==、!=、<、<=、>、>=、in、not，in、is、is not 等判断运算符都可以使用
+    
+2. `for...in...`标签：用法与python类似，常用于遍历等操作，没得back人，和countiue退出循环功能
+    
+    - 遍历列表：
+    ```html
+    <body>
+       {% for username in usernames reversed %}  #加reversed反转遍历结果
+           <li>{{ username }}</li>
+       {% endfor %}
+    </body>
+    ```
+    ```python
+    def index(request):
+    context = {
+        'usernames': [
+            '林应权',
+            'javis',
+            'cuishenyang'
+        ]
+    }
+    return render(request, 'index.html',context=context)
+    ```
+    - 遍历字典：需要使用`item`，`keys`，`values` 等方法
+    ```html
+    <body>
+        {% for username in usernames.items %}
+           <li>{{ username }}</li>
+        {% endfor %}
+    </body>
+    ```
+    ```python
+    def index(request):
+    context = {
+        'usernames': {
+            'name': 'lyq',
+            'age': 18,
+            'head': 180
+        }
+
+    }
+    return render(request, 'index.html',context=context)
+    ```
+    - 嵌套使用
+    ```html
+    <body>
+    <ul>
+        {% for book in books %}
+            <li>{{ book.name }}</li>
+            <li>{{ book.age }}</li>
+        {% endfor %}
+    </ul>
+    </body>
+    ```
+    context数据：
+    ```python
+    def index(request):
+    context = {
+        'books':[
+            {
+                'name':'lyq',
+                'age':'18'
+            },
+            {
+                'name':'csy',
+                'age':'19'
+            }
+        ]
+    }
+    return render(request, 'index.html',context=context)
+    ```
+    - html表格基础
+        - `<table>` : 表格
+        - `<thead>` : 表头
+        - `<tbody>` : 表格内容
+        
+    ```html
+    <body>
+        <table>
+            <thead>
+                <tr>
+                    <td>序号</td>
+                    <td>名字</td>
+                    <td>年龄</td>
+                </tr>
+            </thead>
+            <tbody>
+                {% for book in books %}
+                    <tr>
+                        <td>{{ forloop.revcounter }}</td>
+                        <td>{{ book.name }}</td>
+                        <td>{{ book.age }}</td>
+                    </tr>
+                {% endfor %}
+    
+            </tbody>
+        </table>
+     </body>
+    ```
+    - forloop.counter 能够返回数字序号，默认从1开始，counter0是从0开始
+    - forloop.revcounter 能够逆序返回数字序号
+    - forloop.first ：是否是第一次遍历。
+    - forloop.last ：是否是最后一次遍历。
+    - forloop.parentloop ：如果有多个循环嵌套，那么这个属性代表的是上一级的for循环。
+    ```html
+       <tbody>
+            {% for book in books %}
+                {% if forloop.first %}
+                    <tr style="background: red">    # 如果为第一行，则吧背景颜色设置为红色
+                {% elif forloop.last %}
+                    <tr style="background: pink">   # 如果为最后一行，则吧背景颜色设置为粉色
+                {% else  %}
+                    <tr>
+                {% endif %}
+                    <td>{{ forloop.revcounter }}</td>
+                    <td>{{ book.name }}</td>
+                    <td>{{ book.age }}</td>
+                </tr>
+            {% endfor %}
+       </tbody>
+    ```
+3. `for...in...empty`标签，这个标签使用跟 for...in... 是一样的，只不过是在遍历的对象如果没有元素的情况下，会执行 empty 中的内容。示例代码如下：
+    ```html
+    {% for person in persons %}
+       <li>{{ person }}</li>
+    {% empty %}
+       <li>暂时还没有任何人</li>   # 若person为空，则打印这一句
+    {% endfor %}
+    ```

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        body{
+            background: crimson;
+        }
+    </style>
+</head>
+<body>
+
+    <ul>
+        {% for book in books %}
+            <li>{{ book.name }}</li>
+            <li>{{ book.age }}</li>
+        {% endfor %}
+
+    </ul>
+
+    <table>
+        <thead>
+            <tr>
+                <td>id</td>
+                <td>名字</td>
+                <td>年龄</td>
+            </tr>
+        </thead>
+        <tbody>
+            {% for book in books %}
+                {% if forloop.first %}
+                    <tr style="background: red">
+                {% elif forloop.last %}
+                    <tr style="background: pink">
+                {% else  %}
+                    <tr>
+                {% endif %}
+                    <td>{{ forloop.revcounter }}</td>
+                    <td>{{ book.name }}</td>
+                    <td>{{ book.age }}</td>
+                </tr>
+            {% endfor %}
+
+        </tbody>
+    </table>
+</body>
+</html>
